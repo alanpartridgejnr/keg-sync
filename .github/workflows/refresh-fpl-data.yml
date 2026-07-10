@@ -1,0 +1,41 @@
+name: Refresh FPL Draft data
+
+on:
+  schedule:
+    # Every 6 hours. Tighten this during your gameweek deadline / draft
+    # windows if you want fresher data, e.g. "0 * * * *" for hourly.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch FPL data
+        env:
+          LEAGUE_ID: "2605"
+          FETCH_PICKS: "false"   # set to "true" to also pull all picks (slower)
+        run: python scripts/fetch_fpl_data.py
+
+      - name: Commit changes if data changed
+        run: |
+          git config user.name "fpl-data-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-refresh FPL draft data ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            git push
+          fi
