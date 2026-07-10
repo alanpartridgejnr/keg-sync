@@ -1,196 +1,39 @@
-#!/usr/bin/env python3
-"""
-Fetches Fantasy Premier League Draft data and saves it as JSON files
-in the data/ directory, for a scheduled GitHub Actions job to commit.
+name: Refresh FPL Draft data
 
-Usage:
-    python scripts/fetch_fpl_data.py
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
 
-Environment variables:
-    LEAGUE_ID       - your draft league ID (required)
-    FETCH_PICKS     - "true"/"false", whether to pull roster/lineup data
-                       for every manager (default: "true")
-    FORCE_REFETCH   - "true"/"false", re-pull ALL gameweeks for ALL
-                       managers even if already saved (default: "false").
-                       Use this once if you ever suspect the history file
-                       is stale/corrupted.
-"""
+permissions:
+  contents: write
 
-import json
-import os
-import time
-import urllib.request
-import urllib.error
-from pathlib import Path
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-BASE_URL = "https://draft.premierleague.com/api"
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-LEAGUE_ID = os.environ.get("LEAGUE_ID", "2605")
-FETCH_PICKS = os.environ.get("FETCH_PICKS", "true").lower() == "true"
-FORCE_REFETCH = os.environ.get("FORCE_REFETCH", "false").lower() == "true"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (compatible; fpl-draft-sync/1.0)",
-    "Accept": "application/json",
-}
+      - name: Fetch FPL data
+        env:
+          LEAGUE_ID: "2605"
+          FETCH_PICKS: "true"
+        run: python scripts/fetch_fpl_data.py
 
-
-def fetch_json(url: str, retries: int = 3, delay: float = 1.5):
-    last_err = None
-    for attempt in range(retries):
-        try:
-            req = urllib.request.Request(url, headers=HEADERS)
-            with urllib.request.urlopen(req, timeout=20) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
-            last_err = e
-            time.sleep(delay * (attempt + 1))
-    raise RuntimeError(f"Failed to fetch {url} after {retries} attempts: {last_err}")
-
-
-def save_json(filename: str, data):
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    path = DATA_DIR / filename
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2, sort_keys=True)
-    print(f"Saved {path} ({path.stat().st_size:,} bytes)")
-
-
-def load_json_if_exists(filename: str, default):
-    path = DATA_DIR / filename
-    if path.exists():
-        with open(path) as f:
-            return json.load(f)
-    return default
-
-
-def build_player_lookup(bootstrap: dict) -> dict:
-    """element_id (as string) -> {name, position, team}"""
-    teams = {t["id"]: t["short_name"] for t in bootstrap.get("teams", [])}
-    positions = {p["id"]: p["singular_name_short"] for p in bootstrap.get("element_types", [])}
-    lookup = {}
-    for el in bootstrap.get("elements", []):
-        lookup[str(el["id"])] = {
-            "name": el.get("web_name"),
-            "position": positions.get(el.get("element_type")),
-            "team": teams.get(el.get("team")),
-        }
-    return lookup
-
-
-def current_event_from_bootstrap(bootstrap: dict) -> int:
-    events = bootstrap.get("events", [])
-    for e in events:
-        if e.get("is_current"):
-            return e["id"]
-    # Fall back: highest finished event + 1, or 1 if none finished
-    finished = [e["id"] for e in events if e.get("finished")]
-    return (max(finished) + 1) if finished else 1
-
-
-def enrich_picks(picks_response: dict, player_lookup: dict) -> dict:
-    """Attach player names/positions/teams to a raw picks response."""
-    enriched = json.loads(json.dumps(picks_response))  # deep copy
-    for pick in enriched.get("picks", []):
-        info = player_lookup.get(str(pick["element"]), {})
-        pick["name"] = info.get("name")
-        pick["real_team"] = info.get("team")
-        pick["fpl_position"] = info.get("position")
-        pick["is_starting"] = pick["position"] <= 11
-    for sub in enriched.get("subs", []):
-        sub["name_in"] = player_lookup.get(str(sub["element_in"]), {}).get("name")
-        sub["name_out"] = player_lookup.get(str(sub["element_out"]), {}).get("name")
-    return enriched
-
-
-def fetch_all_picks(entries: list, current_event: int, player_lookup: dict) -> dict:
-    """
-    Incrementally fetch every manager's picks for every gameweek from 1
-    to current_event (inclusive). Skips gameweeks already saved from a
-    previous run UNLESS it's the current (possibly still-updating)
-    gameweek, or FORCE_REFETCH is set.
-    """
-    history = load_json_if_exists("picks-history.json", {})
-
-    for entry in entries:
-        entry_id = str(entry["entry_id"])
-        history.setdefault(entry_id, {})
-
-        for event in range(1, current_event + 1):
-            event_key = str(event)
-            already_have = event_key in history[entry_id]
-            is_live_gw = event == current_event
-
-            if already_have and not is_live_gw and not FORCE_REFETCH:
-                continue  # finished gameweek we already saved, skip
-
-            url = f"{BASE_URL}/entry/{entry_id}/event/{event}"
-            try:
-                raw = fetch_json(url)
-                history[entry_id][event_key] = enrich_picks(raw, player_lookup)
-                print(f"  entry {entry_id} GW{event}: fetched")
-            except RuntimeError as e:
-                print(f"  entry {entry_id} GW{event}: FAILED ({e})")
-            time.sleep(0.3)  # be polite to the API
-
-    return history
-
-
-def build_current_rosters(history: dict, entries_by_id: dict) -> list:
-    """Flatten the latest available gameweek's squad per manager into a
-    simple, directly-readable list."""
-    rosters = []
-    for entry_id, by_event in history.items():
-        available_events = sorted((int(e) for e in by_event.keys()), reverse=True)
-        if not available_events:
-            continue
-        latest_event = available_events[0]
-        picks = by_event[str(latest_event)].get("picks", [])
-        entry_meta = entries_by_id.get(int(entry_id), {})
-        rosters.append({
-            "entry_id": int(entry_id),
-            "team_name": entry_meta.get("entry_name"),
-            "manager": f"{entry_meta.get('player_first_name', '')} {entry_meta.get('player_last_name', '')}".strip(),
-            "as_of_gameweek": latest_event,
-            "starting_xi": [p["name"] for p in picks if p.get("is_starting")],
-            "bench": [p["name"] for p in picks if not p.get("is_starting")],
-        })
-    return rosters
-
-
-def main():
-    print(f"Fetching FPL Draft data for league {LEAGUE_ID}...")
-
-    bootstrap = fetch_json(f"{BASE_URL}/bootstrap-static")
-    save_json("bootstrap-static.json", bootstrap)
-    player_lookup = build_player_lookup(bootstrap)
-    current_event = current_event_from_bootstrap(bootstrap)
-    print(f"Current gameweek: {current_event}")
-
-    league_details = fetch_json(f"{BASE_URL}/league/{LEAGUE_ID}/details")
-    save_json("league-details.json", league_details)
-
-    element_status = fetch_json(f"{BASE_URL}/league/{LEAGUE_ID}/element-status")
-    save_json("element-status.json", element_status)
-
-    try:
-        transactions = fetch_json(f"{BASE_URL}/draft/league/{LEAGUE_ID}/transactions")
-        save_json("transactions.json", transactions)
-    except RuntimeError as e:
-        print(f"Warning: could not fetch transactions ({e}); skipping.")
-
-    if FETCH_PICKS:
-        entries = league_details.get("league_entries", [])
-        entries_by_id = {e["entry_id"]: e for e in entries}
-        print(f"Fetching picks for {len(entries)} managers, GW1-{current_event}...")
-        history = fetch_all_picks(entries, current_event, player_lookup)
-        save_json("picks-history.json", history)
-
-        rosters = build_current_rosters(history, entries_by_id)
-        save_json("current-rosters.json", rosters)
-
-    print("Done.")
-
-
-if __name__ == "__main__":
-    main()
+      - name: Commit changes if data changed
+        run: |
+          git config user.name "fpl-data-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-refresh FPL draft data"
+            git push
+          fi
