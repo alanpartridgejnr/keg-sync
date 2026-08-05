@@ -3401,6 +3401,24 @@
       "in_accepted_trade": false,
       "owner": null,
       "status": "a"
+    },
+    {
+      "element": 568,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
+      "element": 569,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
+      "element": 570,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
     }
   ]
 }
