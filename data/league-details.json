@@ -1,16 +1,16 @@
 {
   "league": {
     "admin_entry": 8198,
-    "closed": false,
-    "draft_dt": "2026-08-07T19:00:00Z",
+    "closed": true,
+    "draft_dt": "2026-08-07T18:30:00Z",
     "draft_pick_time_limit": 90,
-    "draft_status": "pre",
+    "draft_status": "during",
     "draft_tz_show": "Europe/London",
     "drafts": [
       {
         "draft_completed": null,
-        "draft_dt": "2026-08-07T19:00:00Z",
-        "draft_started": false,
+        "draft_dt": "2026-08-07T18:30:00Z",
+        "draft_started": true,
         "event": 1,
         "id": 2759,
         "league": 2605,
@@ -40,17 +40,17 @@
       "player_first_name": "Sam",
       "player_last_name": "Norris",
       "short_name": "SN",
-      "waiver_pick": null
+      "waiver_pick": 7
     },
     {
       "entry_id": 8199,
-      "entry_name": "Lucie Greens Bean FC",
+      "entry_name": "Democracy ManeFest",
       "id": 8203,
       "joined_time": "2026-08-04T15:46:28.207752Z",
       "player_first_name": "Josh",
       "player_last_name": "Lyons",
       "short_name": "JL",
-      "waiver_pick": null
+      "waiver_pick": 3
     },
     {
       "entry_id": 8200,
@@ -60,7 +60,7 @@
       "player_first_name": "Reece",
       "player_last_name": "Murgatroyd",
       "short_name": "RM",
-      "waiver_pick": null
+      "waiver_pick": 8
     },
     {
       "entry_id": 8201,
@@ -70,7 +70,7 @@
       "player_first_name": "Ross",
       "player_last_name": "Mcternan",
       "short_name": "RM1",
-      "waiver_pick": null
+      "waiver_pick": 6
     },
     {
       "entry_id": 8202,
@@ -80,17 +80,17 @@
       "player_first_name": "Jared",
       "player_last_name": "Costa",
       "short_name": "JC",
-      "waiver_pick": null
+      "waiver_pick": 2
     },
     {
       "entry_id": 8204,
-      "entry_name": "FULL BOOM",
+      "entry_name": "MaDaquiriDickSlapper",
       "id": 8208,
       "joined_time": "2026-08-04T15:46:28.285552Z",
       "player_first_name": "Sam",
       "player_last_name": "Tattersall",
       "short_name": "ST",
-      "waiver_pick": null
+      "waiver_pick": 1
     },
     {
       "entry_id": 8205,
@@ -100,7 +100,7 @@
       "player_first_name": "Tom",
       "player_last_name": "Crampton",
       "short_name": "TC",
-      "waiver_pick": null
+      "waiver_pick": 4
     },
     {
       "entry_id": 8206,
@@ -110,7 +110,7 @@
       "player_first_name": "Dan",
       "player_last_name": "Paterson",
       "short_name": "DP",
-      "waiver_pick": null
+      "waiver_pick": 5
     }
   ],
   "matches": [],
