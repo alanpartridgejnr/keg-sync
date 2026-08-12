@@ -2743,6 +2743,30 @@
       "status": "a"
     },
     {
+      "element": 578,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
+      "element": 579,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
+      "element": 580,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
+      "element": 581,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
       "element": 229,
       "in_accepted_trade": false,
       "owner": 8199,
