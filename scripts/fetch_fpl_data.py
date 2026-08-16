@@ -93,6 +93,13 @@ def main():
     element_status = fetch_json(f"{BASE_URL}/league/{LEAGUE_ID}/element-status")
     save_json("element-status.json", element_status)
 
+    # 3.5. Original draft picks (who drafted which player, in what order)
+    try:
+        draft_choices = fetch_json(f"{BASE_URL}/draft/{LEAGUE_ID}/choices")
+        save_json("draft-choices.json", draft_choices)
+    except RuntimeError as e:
+        print(f"Warning: could not fetch draft choices ({e}); skipping.")
+
     # 4. Waiver/free-agent/trade transactions
     try:
         transactions = fetch_json(f"{BASE_URL}/draft/league/{LEAGUE_ID}/transactions")
