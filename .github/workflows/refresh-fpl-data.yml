@@ -22,7 +22,7 @@ jobs:
 
       - name: Fetch FPL data
         env:
-          LEAGUE_ID: "2605"
+          LEAGUE_ID: "64557"
           FETCH_PICKS: "true"
         run: python scripts/fetch_fpl_data.py
 
