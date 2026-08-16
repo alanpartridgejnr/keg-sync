@@ -25,7 +25,7 @@ from pathlib import Path
 
 BASE_URL = "https://draft.premierleague.com/api"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-LEAGUE_ID = os.environ.get("LEAGUE_ID", "64456")
+LEAGUE_ID = os.environ.get("LEAGUE_ID", "64457")
 START_EVENT = int(os.environ.get("START_EVENT", "1"))
 END_EVENT = int(os.environ.get("END_EVENT", "38"))
 FETCH_PICKS = os.environ.get("FETCH_PICKS", "false").lower() == "true"
