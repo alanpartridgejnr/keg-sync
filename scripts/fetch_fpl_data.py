@@ -58,9 +58,24 @@ def save_json(filename: str, data):
 
 
 def get_latest_finished_event(bootstrap: dict) -> int:
-    """Returns the highest gameweek number that has finished, or 0 if none have."""
-    finished = [e["id"] for e in bootstrap.get("events", []) if e.get("finished")]
-    return max(finished) if finished else 0
+    """Returns the highest gameweek number that has finished, or 0 if none have.
+    Falls back safely to 0 if the events data isn't in the expected shape."""
+    events = bootstrap.get("events", [])
+    if not isinstance(events, list):
+        print(f"Warning: unexpected 'events' type ({type(events).__name__}); skipping gameweek cap.")
+        return 0
+
+    finished_ids = []
+    for e in events:
+        if isinstance(e, dict) and e.get("finished"):
+            gw_id = e.get("id")
+            if isinstance(gw_id, int):
+                finished_ids.append(gw_id)
+
+    if not finished_ids and events:
+        print(f"Warning: 'events' present but no finished gameweeks found. Sample item: {events[0]!r}")
+
+    return max(finished_ids) if finished_ids else 0
 
 
 def main():
