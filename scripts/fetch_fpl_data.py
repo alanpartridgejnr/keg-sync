@@ -57,6 +57,12 @@ def save_json(filename: str, data):
     print(f"Saved {path} ({path.stat().st_size:,} bytes)")
 
 
+def get_latest_finished_event(bootstrap: dict) -> int:
+    """Returns the highest gameweek number that has finished, or 0 if none have."""
+    finished = [e["id"] for e in bootstrap.get("events", []) if e.get("finished")]
+    return max(finished) if finished else 0
+
+
 def main():
     print(f"Fetching FPL Draft data for league {LEAGUE_ID}...")
 
@@ -81,19 +87,28 @@ def main():
 
     # 5. (Optional) every manager's picks for every gameweek
     if FETCH_PICKS:
-        entry_ids = [e["entry_id"] for e in league_details.get("league_entries", [])]
-        all_picks = {}
-        for entry_id in entry_ids:
-            all_picks[str(entry_id)] = {}
-            for event in range(START_EVENT, END_EVENT + 1):
-                url = f"{BASE_URL}/entry/{entry_id}/event/{event}"
-                try:
-                    picks = fetch_json(url)
-                    all_picks[str(entry_id)][str(event)] = picks
-                except RuntimeError as e:
-                    print(f"Warning: entry {entry_id} GW{event} failed ({e})")
-                time.sleep(0.3)  # be polite to the API
-        save_json("all-picks.json", all_picks)
+        # Cap END_EVENT at the latest finished gameweek so we don't waste
+        # time and retries hitting 404s for gameweeks that haven't happened yet.
+        latest_finished = get_latest_finished_event(bootstrap)
+        effective_end = min(END_EVENT, latest_finished) if latest_finished else 0
+
+        if effective_end < START_EVENT:
+            print(f"No finished gameweeks yet (latest finished: {latest_finished}); skipping picks fetch.")
+        else:
+            print(f"Fetching picks for gameweeks {START_EVENT}-{effective_end} (latest finished: {latest_finished})")
+            entry_ids = [e["entry_id"] for e in league_details.get("league_entries", [])]
+            all_picks = {}
+            for entry_id in entry_ids:
+                all_picks[str(entry_id)] = {}
+                for event in range(START_EVENT, effective_end + 1):
+                    url = f"{BASE_URL}/entry/{entry_id}/event/{event}"
+                    try:
+                        picks = fetch_json(url)
+                        all_picks[str(entry_id)][str(event)] = picks
+                    except RuntimeError as e:
+                        print(f"Warning: entry {entry_id} GW{event} failed ({e})")
+                    time.sleep(0.3)  # be polite to the API
+            save_json("picks-history.json", all_picks)
 
     print("Done.")
 
