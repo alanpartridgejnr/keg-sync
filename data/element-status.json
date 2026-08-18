@@ -2641,6 +2641,18 @@
       "status": "a"
     },
     {
+      "element": 591,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
+      "element": 592,
+      "in_accepted_trade": false,
+      "owner": null,
+      "status": "a"
+    },
+    {
       "element": 229,
       "in_accepted_trade": false,
       "owner": 64461,
