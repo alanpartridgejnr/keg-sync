@@ -107,7 +107,10 @@ def main():
     except RuntimeError as e:
         print(f"Warning: could not fetch transactions ({e}); skipping.")
 
-    # 5. (Optional) every manager's picks for every gameweek
+    # 5. (Optional) every manager's picks for every gameweek, and every
+    #    player's per-gameweek points (needed together by the Cup of Beans
+    #    skill — picks-history tells you who was fielded, live-points tells
+    #    you what they scored).
     if FETCH_PICKS:
         # Cap END_EVENT at the latest finished gameweek so we don't waste
         # time and retries hitting 404s for gameweeks that haven't happened yet.
@@ -115,7 +118,7 @@ def main():
         effective_end = min(END_EVENT, latest_finished) if latest_finished else 0
 
         if effective_end < START_EVENT:
-            print(f"No finished gameweeks yet (latest finished: {latest_finished}); skipping picks fetch.")
+            print(f"No finished gameweeks yet (latest finished: {latest_finished}); skipping picks/live-points fetch.")
         else:
             print(f"Fetching picks for gameweeks {START_EVENT}-{effective_end} (latest finished: {latest_finished})")
             entry_ids = [e["entry_id"] for e in league_details.get("league_entries", [])]
@@ -132,7 +135,65 @@ def main():
                     time.sleep(0.3)  # be polite to the API
             save_json("picks-history.json", all_picks)
 
+            fetch_live_points(START_EVENT, effective_end)
+
     print("Done.")
+
+
+def fetch_live_points(start_event: int, effective_end: int):
+    """Per-gameweek total_points for every player, keyed as:
+        {"1": {"233": 6, "412": 2, ...}, "2": {...}}
+
+    Loads whatever's already saved and only fetches gameweeks that are
+    missing, since a finished gameweek's points never change. One request
+    per gameweek (not per entry), so this is much cheaper than the picks
+    fetch above.
+    """
+    existing_path = DATA_DIR / "live-points.json"
+    store = {}
+    if existing_path.exists():
+        with open(existing_path) as f:
+            store = json.load(f)
+
+    missing = [e for e in range(start_event, effective_end + 1) if str(e) not in store]
+    if not missing:
+        print("live-points.json already covers this range, skipping.")
+        return
+
+    print(f"Fetching live points for gameweeks {missing}")
+    for event in missing:
+        url = f"{BASE_URL}/event/{event}/live"
+        try:
+            live = fetch_json(url)
+        except RuntimeError as e:
+            print(f"Warning: GW{event} live points failed ({e})")
+            continue
+
+        elements = live.get("elements", {})
+        points = {}
+        if isinstance(elements, dict):
+            for element_id, payload in elements.items():
+                stats = (payload or {}).get("stats") or {}
+                points[str(element_id)] = stats.get("total_points", 0)
+        elif isinstance(elements, list):
+            for payload in elements:
+                stats = (payload or {}).get("stats") or {}
+                el_id = payload.get("id") if isinstance(payload, dict) else None
+                if el_id is not None:
+                    points[str(el_id)] = stats.get("total_points", 0)
+        else:
+            print(f"Warning: unexpected 'elements' type for GW{event} ({type(elements).__name__}); skipping.")
+            continue
+
+        if not points:
+            print(f"Warning: GW{event} live endpoint returned no element stats; skipping.")
+            continue
+
+        store[str(event)] = points
+        print(f"  GW{event}: {len(points)} players")
+        time.sleep(0.3)  # be polite to the API
+
+    save_json("live-points.json", store)
 
 
 if __name__ == "__main__":
