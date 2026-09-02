@@ -45721,22 +45721,6 @@
         "team_h_score": null
       },
       {
-        "code": 2645240,
-        "event": 5,
-        "finished": false,
-        "finished_provisional": false,
-        "id": 44,
-        "kickoff_time": "2026-09-19T14:00:00Z",
-        "minutes": 0,
-        "provisional_start_time": false,
-        "pulse_id": 0,
-        "started": false,
-        "team_a": 8,
-        "team_a_score": null,
-        "team_h": 13,
-        "team_h_score": null
-      },
-      {
         "code": 2645242,
         "event": 5,
         "finished": false,
@@ -45782,6 +45766,22 @@
         "team_a": 14,
         "team_a_score": null,
         "team_h": 3,
+        "team_h_score": null
+      },
+      {
+        "code": 2645240,
+        "event": 5,
+        "finished": false,
+        "finished_provisional": false,
+        "id": 44,
+        "kickoff_time": "2026-09-20T13:00:00Z",
+        "minutes": 0,
+        "provisional_start_time": false,
+        "pulse_id": 0,
+        "started": false,
+        "team_a": 8,
+        "team_a_score": null,
+        "team_h": 13,
         "team_h_score": null
       },
       {
