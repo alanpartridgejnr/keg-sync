@@ -358,9 +358,9 @@
       "event": 5,
       "finished": false,
       "league_entry_1": 64589,
-      "league_entry_1_points": 0,
+      "league_entry_1_points": 2,
       "league_entry_2": 64581,
-      "league_entry_2_points": 0,
+      "league_entry_2_points": 3,
       "started": true,
       "winning_league_entry": null,
       "winning_method": null
@@ -371,7 +371,7 @@
       "league_entry_1": 64590,
       "league_entry_1_points": 0,
       "league_entry_2": 64588,
-      "league_entry_2_points": 0,
+      "league_entry_2_points": 9,
       "started": true,
       "winning_league_entry": null,
       "winning_method": null
@@ -380,9 +380,9 @@
       "event": 5,
       "finished": false,
       "league_entry_1": 64582,
-      "league_entry_1_points": 0,
+      "league_entry_1_points": 7,
       "league_entry_2": 64587,
-      "league_entry_2_points": 0,
+      "league_entry_2_points": 2,
       "started": true,
       "winning_league_entry": null,
       "winning_method": null
@@ -393,7 +393,7 @@
       "league_entry_1": 64583,
       "league_entry_1_points": 0,
       "league_entry_2": 64586,
-      "league_entry_2_points": 0,
+      "league_entry_2_points": 8,
       "started": true,
       "winning_league_entry": null,
       "winning_method": null
