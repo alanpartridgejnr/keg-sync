@@ -6274,7 +6274,7 @@
     },
     {
       "element": 316,
-      "in_accepted_trade": false,
+      "in_accepted_trade": true,
       "owner": 64458,
       "status": "o"
     },
@@ -6394,7 +6394,7 @@
     },
     {
       "element": 646,
-      "in_accepted_trade": false,
+      "in_accepted_trade": true,
       "owner": 64457,
       "status": "o"
     },
