@@ -28,7 +28,7 @@
     "start_event": 1,
     "stop_event": 38,
     "trades": "m",
-    "transaction_mode": "waivers",
+    "transaction_mode": "free-agency",
     "variety": "x"
   },
   "league_entries": [
