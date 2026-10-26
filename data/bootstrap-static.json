@@ -47924,8 +47924,8 @@
         "highest_scoring_entry": null,
         "id": 14,
         "name": "Gameweek 14",
-        "trades_time": "2026-12-03T11:00:00Z",
-        "waivers_time": "2026-12-04T11:00:00Z"
+        "trades_time": "2026-12-03T14:00:00Z",
+        "waivers_time": "2026-12-04T14:00:00Z"
       },
       {
         "average_entry_score": null,
@@ -48744,7 +48744,9 @@
       "trade_veto_hours": 24,
       "trade_veto_minimum": 50,
       "waivers_before_deadline_hours": 24,
-      "waivers_before_deadline_hours_event": {},
+      "waivers_before_deadline_hours_event": {
+        "14": 21
+      },
       "waivers_before_start_min_hours": 48
     },
     "ui": {
